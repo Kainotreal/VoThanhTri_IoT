@@ -14,7 +14,7 @@ workflows:
       - name: Build Flutter iOS
         script: |
           # Build bản debug để kiểm tra lỗi nhanh hơn và không yêu cầu ký số khắt khe
-          flutter build ios --debug --no-codesign
+          flutter build ios --release --no-codesign
     artifacts:
       - build/ios/iphoneos/*.app # Vì không có chứng chỉ Apple nên nó sẽ ra file .app thay vì .ipa
     publishing:
