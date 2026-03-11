@@ -2,9 +2,7 @@ workflows:
   ios-workflow:
     name: iOS Build Workflow
     max_build_duration: 60
-    instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: "Tên_Kết_Nối_Của_Bạn" # Thay bằng tên bạn đặt trong mục Integrations
+    instance_type: mac_mini_m2 # Máy M2 mạnh hơn, dùng cho sướng Trí ạ
     triggering:
       events:
         - push
@@ -15,11 +13,11 @@ workflows:
         script: flutter packages pub get
       - name: Build Flutter iOS
         script: |
-          # Build bản release nhưng không ký số (non-signed) để kiểm tra lỗi trước
-          flutter build ios --release --no-codesign
+          # Build bản debug để kiểm tra lỗi nhanh hơn và không yêu cầu ký số khắt khe
+          flutter build ios --debug --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/*.app # Vì không có chứng chỉ Apple nên nó sẽ ra file .app thay vì .ipa
     publishing:
       email:
         recipients:
-          - email_của_bạn@gmail.com
+          - vothanhtri1509@gmail.com # Mình lấy từ email trong ảnh log của bạn nhé
