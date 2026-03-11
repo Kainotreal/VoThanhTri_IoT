@@ -1,0 +1,25 @@
+workflows:
+  ios-workflow:
+    name: iOS Build Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: "Tên_Kết_Nối_Của_Bạn" # Thay bằng tên bạn đặt trong mục Integrations
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+    scripts:
+      - name: Get Flutter dependencies
+        script: flutter packages pub get
+      - name: Build Flutter iOS
+        script: |
+          # Build bản release nhưng không ký số (non-signed) để kiểm tra lỗi trước
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - email_của_bạn@gmail.com
