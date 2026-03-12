@@ -147,29 +147,106 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Lịch sử - $deviceName'),
+        title: Text('Dữ liệu thiết bị - $deviceName'),
         content: SizedBox(
           width: double.maxFinite,
+          height: 400,
           child: telemetries.isEmpty
-              ? const Text('Không có dữ liệu mới.')
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: telemetries.length,
-                  itemBuilder: (context, index) {
-                    final t = telemetries[index];
-                    return ListTile(
-                      leading: const Icon(Icons.sensors, color: Colors.blue),
-                      title: Text(t.value,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(t.timestamp),
-                    );
-                  },
+              ? const Center(child: Text('Không có dữ liệu.'))
+              : Column(
+                  children: [
+                    // Summary Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tổng số bản ghi: ${telemetries.length}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (telemetries.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Giá trị mới nhất: ${telemetries.first.value}',
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                            Text(
+                              'Thời gian: ${telemetries.first.timestamp}',
+                              style: const TextStyle(
+                                  color: Colors.black54, fontSize: 12),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Data List
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: telemetries.length,
+                        itemBuilder: (context, index) {
+                          final t = telemetries[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue.shade100,
+                                child: Icon(Icons.data_object,
+                                    color: Colors.blue.shade700, size: 20),
+                              ),
+                              title: Text(
+                                t.value,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              subtitle: Text(
+                                t.timestamp,
+                                style: TextStyle(
+                                    color: Colors.grey.shade600, fontSize: 12),
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '#${index + 1}',
+                                  style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Đóng')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+          if (telemetries.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                fetchDevices(); // Refresh data
+              },
+              child: const Text('Làm mới'),
+            ),
         ],
       ),
     );
