@@ -150,7 +150,7 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
         title: Text('Dữ liệu thiết bị - $deviceName'),
         content: SizedBox(
           width: double.maxFinite,
-          height: 400,
+          height: 500,
           child: telemetries.isEmpty
               ? const Center(child: Text('Không có dữ liệu.'))
               : Column(
@@ -195,36 +195,117 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
                           final t = telemetries[index];
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blue.shade100,
-                                child: Icon(Icons.data_object,
-                                    color: Colors.blue.shade700, size: 20),
-                              ),
-                              title: Text(
-                                t.value,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              subtitle: Text(
-                                t.timestamp,
-                                style: TextStyle(
-                                    color: Colors.grey.shade600, fontSize: 12),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade100,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '#${index + 1}',
-                                  style: TextStyle(
-                                      color: Colors.green.shade700,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Header with ID and timestamp
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade100,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'ID: ${t.id ?? index + 1}',
+                                          style: TextStyle(
+                                              color: Colors.green.shade700,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        t.timestamp,
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Main value
+                                  Text(
+                                    'Nội dung: ${t.value}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                  // Show all raw data if available
+                                  if (t.rawData != null &&
+                                      t.rawData!.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                            color: Colors.grey.shade200),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Dữ liệu đầy đủ:',
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.grey),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          ...t.rawData!.entries
+                                              .where((e) =>
+                                                  e.key != 'id' &&
+                                                  e.key != 'timestamp' &&
+                                                  e.key != 'value')
+                                              .map(
+                                                (entry) => Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          bottom: 2),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        '${entry.key}:',
+                                                        style: const TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color:
+                                                                Colors.black87),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Text(
+                                                          entry.value
+                                                              .toString(),
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 11,
+                                                                  color: Colors
+                                                                      .black54),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           );
@@ -429,9 +510,30 @@ class Device {
 }
 
 class Telemetry {
+  final int? id;
   final String timestamp;
   final String value;
-  Telemetry({required this.timestamp, required this.value});
-  factory Telemetry.fromJson(Map<String, dynamic> json) =>
-      Telemetry(timestamp: json['timestamp'] ?? '', value: json['value'] ?? '');
+  final int? deviceId;
+  final Map<String, dynamic>? rawData;
+
+  Telemetry(
+      {this.id,
+      required this.timestamp,
+      required this.value,
+      this.deviceId,
+      this.rawData});
+
+  factory Telemetry.fromJson(Map<String, dynamic> json) {
+    // Store all raw data for complete display
+    Map<String, dynamic> allData = Map<String, dynamic>.from(json);
+
+    return Telemetry(
+      id: json['id'],
+      timestamp: json['timestamp'] ?? json['created_at'] ?? '',
+      value:
+          json['value'] ?? json['data'] ?? json['payload'] ?? json.toString(),
+      deviceId: json['device_id'],
+      rawData: allData,
+    );
+  }
 }
