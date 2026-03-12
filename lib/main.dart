@@ -381,32 +381,27 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
                                       fontSize: 14, color: Colors.grey),
                                 ),
                                 const SizedBox(height: 12),
-                                // Command Input and Buttons Row
+                                // Command Input and Buttons Section
+                                TextField(
+                                  controller: _deviceControllers[d.id] ??=
+                                      TextEditingController(),
+                                  decoration: InputDecoration(
+                                    hintText: 'Nhập lệnh',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
                                 Row(
                                   children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: TextField(
-                                        controller: _deviceControllers[d.id] ??=
-                                            TextEditingController(),
-                                        decoration: InputDecoration(
-                                          hintText: 'Nhập lệnh',
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 12, vertical: 8),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
                                     ElevatedButton(
                                       onPressed: () => controlDevice(d.id),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.black,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 12),
                                       ),
@@ -417,8 +412,8 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
                                       onPressed: () =>
                                           _showTelemetryDialog(d.id, d.name),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                        foregroundColor: Colors.white,
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.black,
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 12),
                                       ),
