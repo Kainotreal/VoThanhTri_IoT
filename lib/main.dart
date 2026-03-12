@@ -31,18 +31,17 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
   String get _baseUrl {
     if (kIsWeb) return 'http://localhost:8080';
     if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-    
-    // iPhone thật không dùng được localhost. 
-    // Trí hãy đảm bảo IP này trùng với IPv4 khi gõ ipconfig trên máy tính.
-    return 'http://192.168.1.4:8080'; 
+
+    // Dùng IP Tailscale của máy tính (trivo)
+    return 'http://100.114.50.44:8080';
   }
 
   List<Device> _devices = [];
   bool _isLoading = false;
-  
+  Map<int, TextEditingController> _deviceControllers = {};
+
   final _deviceNameController = TextEditingController();
   final _deviceTopicController = TextEditingController();
-  final _payloadController = TextEditingController();
 
   @override
   void initState() {
@@ -61,9 +60,9 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
   Future<void> fetchDevices() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/devices'))
-          .timeout(const Duration(seconds: 5)); // Không để app bị treo nếu mất mạng
-      
+      final response = await http.get(Uri.parse('$_baseUrl/devices')).timeout(
+          const Duration(seconds: 5)); // Không để app bị treo nếu mất mạng
+
       if (response.statusCode == 200) {
         final List list = json.decode(response.body);
         setState(() {
@@ -82,22 +81,25 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
 
   // Tạo thiết bị mới
   Future<void> createDevice() async {
-    if (_deviceNameController.text.isEmpty || _deviceTopicController.text.isEmpty) return;
+    if (_deviceNameController.text.isEmpty ||
+        _deviceTopicController.text.isEmpty) return;
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/devices'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'name': _deviceNameController.text,
-          'topic': _deviceTopicController.text,
-        }),
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/devices'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'name': _deviceNameController.text,
+              'topic': _deviceTopicController.text,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         _deviceNameController.clear();
         _deviceTopicController.clear();
         _showSnackBar('Thêm thiết bị thành công');
-        fetchDevices(); 
+        fetchDevices();
       }
     } catch (e) {
       _showSnackBar('Lỗi khi tạo: $e');
@@ -107,11 +109,13 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
   // Điều khiển thiết bị
   Future<void> controlDevice(int id) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/devices/$id/control'),
-        headers: {'Content-Type': 'text/plain'},
-        body: _payloadController.text,
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/devices/$id/control'),
+            headers: {'Content-Type': 'text/plain'},
+            body: _deviceControllers[id]?.text ?? '',
+          )
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         _showSnackBar('Lệnh đã gửi thành công');
@@ -124,7 +128,8 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
   // Lấy dữ liệu Telemetry từ server
   Future<List<Telemetry>> fetchTelemetry(int deviceId) async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/telemetry/$deviceId'))
+      final response = await http
+          .get(Uri.parse('$_baseUrl/telemetry/$deviceId'))
           .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final List list = json.decode(response.body);
@@ -154,14 +159,17 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
                     final t = telemetries[index];
                     return ListTile(
                       leading: const Icon(Icons.sensors, color: Colors.blue),
-                      title: Text(t.value, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(t.value,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(t.timestamp),
                     );
                   },
                 ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Đóng')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng')),
         ],
       ),
     );
@@ -177,50 +185,157 @@ class _IoTDeviceDashboardState extends State<IoTDeviceDashboard> {
           IconButton(onPressed: fetchDevices, icon: const Icon(Icons.refresh))
         ],
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
-            onRefresh: fetchDevices,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ListView(
-                children: [
-                  const Text('📋 Danh sách thiết bị', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  ..._devices.map((d) => Card(
-                    color: Colors.blue.shade50,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: ListTile(
-                      title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Topic: ${d.topic}'),
-                      trailing: ElevatedButton(
-                        onPressed: () => controlDevice(d.id),
-                        child: const Text('Gửi lệnh'),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: fetchDevices,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ListView(
+                  children: [
+                    // Device List Section
+                    const Text('Danh sách thiết bị',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    ..._devices.map((d) => Card(
+                          color: Colors.white,
+                          margin: const EdgeInsets.only(bottom: 15),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Device Name
+                                Text(
+                                  d.name,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87),
+                                ),
+                                const SizedBox(height: 8),
+                                // MQTT Topic
+                                Text(
+                                  'MQTT Topic: ${d.topic}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                ),
+                                const SizedBox(height: 12),
+                                // Command Input and Buttons Row
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: TextField(
+                                        controller: _deviceControllers[d.id] ??=
+                                            TextEditingController(),
+                                        decoration: InputDecoration(
+                                          hintText: 'Nhập lệnh',
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 12, vertical: 8),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    ElevatedButton(
+                                      onPressed: () => controlDevice(d.id),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 12),
+                                      ),
+                                      child: const Text('Gửi lệnh'),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          _showTelemetryDialog(d.id, d.name),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 12),
+                                      ),
+                                      child: const Text('Xem dữ liệu'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        )),
+
+                    const SizedBox(height: 30),
+
+                    // Add New Device Section
+                    Card(
+                      color: Colors.white,
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Add new device',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87),
+                            ),
+                            const SizedBox(height: 15),
+                            TextField(
+                              controller: _deviceNameController,
+                              decoration: InputDecoration(
+                                labelText: 'Tên thiết bị',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: _deviceTopicController,
+                              decoration: InputDecoration(
+                                labelText: 'Topic MQTT',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: createDevice,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text('Tạo thiết bị'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      onTap: () => _showTelemetryDialog(d.id, d.name),
                     ),
-                  )),
-                  const Divider(height: 40),
-                  const Text('➕ Thêm thiết bị mới', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  TextField(controller: _deviceNameController, decoration: const InputDecoration(labelText: 'Tên thiết bị (VD: Den Phong Khach)')),
-                  TextField(controller: _deviceTopicController, decoration: const InputDecoration(labelText: 'Topic (VD: /home/light)')),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade200, foregroundColor: Colors.black),
-                    onPressed: createDevice, 
-                    child: const Text('Tạo thiết bị ngay')
-                  ),
-                  const SizedBox(height: 30),
-                  const Text('🎮 Nhập lệnh điều khiển', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  TextField(
-                    controller: _payloadController, 
-                    decoration: const InputDecoration(hintText: 'Ví dụ: ON hoặc {"data": 20}', border: OutlineInputBorder())
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
     );
   }
 }
@@ -230,12 +345,16 @@ class Device {
   final String name;
   final String topic;
   Device({required this.id, required this.name, required this.topic});
-  factory Device.fromJson(Map<String, dynamic> json) => Device(id: json['id'] ?? 0, name: json['name'] ?? '', topic: json['topic'] ?? '');
+  factory Device.fromJson(Map<String, dynamic> json) => Device(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      topic: json['topic'] ?? '');
 }
 
 class Telemetry {
   final String timestamp;
   final String value;
   Telemetry({required this.timestamp, required this.value});
-  factory Telemetry.fromJson(Map<String, dynamic> json) => Telemetry(timestamp: json['timestamp'] ?? '', value: json['value'] ?? '');
+  factory Telemetry.fromJson(Map<String, dynamic> json) =>
+      Telemetry(timestamp: json['timestamp'] ?? '', value: json['value'] ?? '');
 }
