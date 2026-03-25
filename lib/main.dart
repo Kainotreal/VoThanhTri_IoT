@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_browser_client.dart';
+import 'mqtt_setup.dart'
+    if (dart.library.io) 'mqtt_setup_io.dart'
+    if (dart.library.html) 'mqtt_setup_web.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,7 +41,7 @@ class _LEDControllerPageState extends State<LEDControllerPage> {
   final String topicToPublish = '/topic/led'; // Topic chính xác
   final String topicToSubscribe = '/topic/led';
 
-  late MqttBrowserClient client;
+  late MqttClient client;
   String connectionState = 'Đang ngắt kết nối';
   bool isConnected = false;
   bool ledStatus = false;
@@ -55,17 +57,9 @@ class _LEDControllerPageState extends State<LEDControllerPage> {
       connectionState = 'Đang kết nối...';
     });
 
-    // Khởi tạo client cho browser
-    client = MqttBrowserClient(server, clientIdentifier);
-    client.port = port;
+    // Khởi tạo client hỗ trợ đa nền tảng (Web/iOS/Android)
+    client = setupMqttClient(server, port, clientIdentifier);
     client.keepAlivePeriod = 20;
-    
-    // Sử dụng dynamic để tránh lỗi biên dịch nếu thuộc tính không tồn tại
-    try {
-      (client as dynamic).websocketPath = '/mqtt';
-    } catch (e) {
-      print('>>> Setter websocketPath không khả dụng: $e');
-    }
 
     client.onConnected = _onConnected;
     client.onDisconnected = _onDisconnected;
