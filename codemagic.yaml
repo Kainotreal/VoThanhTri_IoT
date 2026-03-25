@@ -13,12 +13,18 @@ workflows:
     scripts:
       - name: Get Flutter dependencies
         script: flutter packages pub get
-      - name: Build Flutter iOS
+      - name: Build Flutter iOS (Unsigned IPA)
         script: |
-          # Build cho simulator để không yêu cầu Certificate/Provisioning Profile
-          flutter build ios --simulator --debug
+          # Build cho thiết bị thật (iphoneos) không cần chứng chỉ gốc
+          flutter build ios --release --no-codesign
+          
+          # Đóng gói thành file .ipa để dùng Sideloadly hoặc 3uTools cài đặt
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r app.ipa Payload
     artifacts:
-      - build/ios/iphonesimulator/*.app 
+      - build/ios/iphoneos/app.ipa
     publishing:
       email:
         recipients:
