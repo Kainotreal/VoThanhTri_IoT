@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/primary_button.dart';
 
@@ -21,38 +22,202 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       body: SafeArea(
-        child: Stack(
+        child: _buildBodyContent(),
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildBodyContent() {
+    if (_bottomNavIndex == 3) {
+      return _buildAccountView();
+    }
+    // Default Home View
+    return _buildHomeView();
+  }
+
+  Widget _buildHomeView() {
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
+            _buildHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    _buildWeatherCard(),
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('All Devices'),
+                    const SizedBox(height: 16),
+                    _buildRoomFilters(),
+                    const SizedBox(height: 40),
+                    _buildEmptyState(),
+                    const SizedBox(height: 100), // Space for bottom nav/FAB
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        _buildFloatingButtons(),
+      ],
+    );
+  }
+
+  Widget _buildAccountView() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          child: Row(
+            children: [
+              const Text('My Home', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1F1F1F))),
+              const SizedBox(width: 4),
+              const Icon(Icons.keyboard_arrow_down, size: 28, color: Color(0xFF1F1F1F)),
+              const Spacer(),
+              const Icon(Icons.qr_code_scanner, color: Color(0xFF1F1F1F)),
+              const SizedBox(width: 16),
+              const Icon(Icons.more_vert, color: Color(0xFF1F1F1F)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 30,
+                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        _buildWeatherCard(),
-                        const SizedBox(height: 24),
-                        _buildSectionHeader('All Devices'),
-                        const SizedBox(height: 16),
-                        _buildRoomFilters(),
-                        const SizedBox(height: 40),
-                        _buildEmptyState(),
-                        const SizedBox(height: 100), // Space for bottom nav/FAB
+                      children: const [
+                        Text('Andrew Ainsley', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F1F1F))),
+                        SizedBox(height: 4),
+                        Text('andrew.ainsley@yourdomain.com', style: TextStyle(fontSize: 12, color: Colors.black54)),
                       ],
                     ),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right, color: Colors.black26),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text('General', style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                _buildListTile(Icons.home_outlined, 'Home Management'),
+                _buildListTile(Icons.spatial_audio_off_outlined, 'Voice Assistants'),
+                _buildListTile(Icons.notifications_none_outlined, 'Notifications'),
+                _buildListTile(Icons.security_outlined, 'Account & Security'),
+                _buildListTile(Icons.sync_alt, 'Linked Accounts'),
+                _buildListTile(Icons.remove_red_eye_outlined, 'App Appearance'),
+                _buildListTile(Icons.settings_outlined, 'Additional Settings'),
+                const SizedBox(height: 24),
+                const Text('Support', style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                _buildListTile(Icons.analytics_outlined, 'Data & Analytics'),
+                _buildListTile(Icons.help_outline, 'Help & Support'),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: const Text('Logout', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15)),
+                  onTap: () => _showLogoutBottomSheet(),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListTile(IconData icon, String title) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: const Color(0xFF1F1F1F)),
+      title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1F1F1F))),
+      trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+      onTap: () {},
+    );
+  }
+
+  void _showLogoutBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
                   ),
+                ),
+                const SizedBox(height: 24),
+                const Text('Logout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.black12),
+                const SizedBox(height: 16),
+                const Text('Are you sure you want to log out?', style: TextStyle(fontSize: 16, color: Color(0xFF1F1F1F), fontWeight: FontWeight.w600)),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFEEF2FF),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                        onPressed: () => context.pop(),
+                        child: const Text('Cancel', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 15)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                        ),
+                        onPressed: () {
+                          context.pop(); // close bottom sheet
+                          context.go(AppRoutes.getStarted); // logout
+                        },
+                        child: const Text('Yes, Logout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            _buildFloatingButtons(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNav(),
+          ),
+        );
+      },
     );
   }
 
@@ -306,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 200,
             child: PrimaryButton(
               text: 'Add Device',
-              onPressed: () {},
+              onPressed: () => context.push(AppRoutes.addDevice),
               icon: Icons.add,
             ),
           ),
@@ -354,10 +519,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 16),
             // Add Icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10))]),
-              child: const Icon(Icons.add, color: Colors.white, size: 32),
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.addDevice),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    )
+                  ],
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 32),
+              ),
             ),
           ],
         ),

@@ -14,6 +14,8 @@ import '../../features/account_setup/screens/add_rooms_screen.dart';
 import '../../features/account_setup/screens/set_location_screen.dart';
 import '../../features/account_setup/screens/well_done_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/home/screens/add_device_screen.dart';
+import '../../features/home/screens/scan_device_screen.dart';
 
 class AppRoutes {
   static const splash = '/';
@@ -30,6 +32,8 @@ class AppRoutes {
   static const setLocation = '/set-location';
   static const wellDone = '/well-done';
   static const home = '/home';
+  static const addDevice = '/add-device';
+  static const scanDevice = '/scan-device';
 
   static final router = GoRouter(
     initialLocation: splash,
@@ -93,6 +97,17 @@ class AppRoutes {
       GoRoute(
         path: home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: addDevice,
+        builder: (context, state) {
+          final initialDevice = state.extra as DeviceItem?;
+          return AddDeviceScreen(initialDevice: initialDevice);
+        },
+      ),
+      GoRoute(
+        path: scanDevice,
+        builder: (context, state) => const ScanDeviceScreen(),
       ),
     ],
   );
