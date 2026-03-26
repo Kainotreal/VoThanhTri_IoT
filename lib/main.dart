@@ -35,7 +35,7 @@ class LEDControllerPage extends StatefulWidget {
 
 class _LEDControllerPageState extends State<LEDControllerPage> {
   // --- CẤU HÌNH MQTT ---
-  final String server = '100.114.50.44'; // IP CỦA BẠN
+  final String server = '10.52.238.234'; // IP CỦA BẠN
   final int port = 8083; // Cổng WebSocket
   final String clientIdentifier = 'flutter_web_${DateTime.now().millisecondsSinceEpoch}';
   final String topicToPublish = '/topic/led'; // Topic chính xác
