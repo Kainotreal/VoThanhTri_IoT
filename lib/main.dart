@@ -65,7 +65,7 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
       children: [
         // 1. QUẦNG SÁNG TỎA SAU ĐÈN
         Positioned(
-          top: -50,
+          top: -35,
           right: -205, // Dịch sang phải 100px
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 500),
@@ -95,7 +95,7 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
 
         // 2. HÌNH ẢNH CHIẾC ĐÈN 
         Positioned(
-          top: -40,
+          top: -60,
           right: -100, 
           child: SizedBox(
             height: 480, 
@@ -109,14 +109,14 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
         // 3. BÓNG ĐÈN (Render trên cùng)
         if (isOn)
           Positioned(
-            top: 300, // Căn chỉnh cho khớp tâm miệng đèn
-            right: 100, 
+            top: 280, // Căn chỉnh cho khớp tâm miệng đèn
+            right: 90, 
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 300),
               opacity: isOn ? 1.0 : 0.0,
               child: Image.asset(
                 'assets/light.png',
-                width: 80, 
+                width: 100, 
                 fit: BoxFit.contain,
               ),
             ),
