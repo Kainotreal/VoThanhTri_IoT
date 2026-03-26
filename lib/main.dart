@@ -114,13 +114,10 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 300),
               opacity: isOn ? 1.0 : 0.0,
-              child: Opacity(
-                opacity: 0.3 + (intensity * 0.7), 
-                child: Image.asset(
-                  'assets/light.png',
-                  width: 80, 
-                  fit: BoxFit.contain,
-                ),
+              child: Image.asset(
+                'assets/light.png',
+                width: 80, 
+                fit: BoxFit.contain,
               ),
             ),
           ),
