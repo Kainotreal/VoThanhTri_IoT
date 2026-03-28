@@ -61,7 +61,7 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
       children: const [
         Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
         SizedBox(width: 5),
-        Text("Phòng Bếp", style: TextStyle(color: Colors.white, fontSize: 18)),
+        Text("Kitchen", style: TextStyle(color: Colors.white, fontSize: 18)),
       ],
     );
   }
@@ -137,9 +137,9 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
-        Text("Đèn Quầy Bar",
+        Text("Island Kitchen Bar",
             style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-        Text("Đèn Thả Trần LED",
+        Text("LED Pendant Ceiling Light",
             style: TextStyle(color: Colors.white60, fontSize: 16)),
       ],
     );
@@ -179,7 +179,7 @@ shape: BoxShape.circle,
           ),
         ),
         const SizedBox(width: 15),
-        Text(isOn ? "BẬT" : "TẮT",
+        Text(isOn ? "ON" : "OFF",
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ],
     );
@@ -195,7 +195,7 @@ shape: BoxShape.circle,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            const Text("Cường độ ánh sáng",
+            const Text("Light Intensity",
                 style: TextStyle(color: Colors.white54, fontSize: 14)),
             const SizedBox(height: 10),
             Row(
