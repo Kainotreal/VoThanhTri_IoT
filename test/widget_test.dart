@@ -11,20 +11,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:led_vip/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Smart LED UI Smoke Test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MaterialApp(home: KitchenLightPage()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that our header text is present.
+    expect(find.text('Kitchen'), findsOneWidget);
+    expect(find.text('Island Kitchen Bar'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the light is initially OFF.
+    expect(find.text('OFF'), findsOneWidget);
+    expect(find.text('ON'), findsNothing);
   });
 }

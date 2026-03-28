@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'mqtt_handler.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -17,6 +18,13 @@ class KitchenLightPage extends StatefulWidget {
 class _KitchenLightPageState extends State<KitchenLightPage> {
   bool isOn = false;
   double intensity = 0.5;
+  final MqttHandler mqttHandler = MqttHandler();
+
+  @override
+  void initState() {
+    super.initState();
+    mqttHandler.connect();
+  }
 
   static const Color _bgColor = Color(0xFF233329);
 
@@ -53,7 +61,7 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
       children: const [
         Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
         SizedBox(width: 5),
-        Text("Kitchen", style: TextStyle(color: Colors.white, fontSize: 18)),
+        Text("Phòng Bếp", style: TextStyle(color: Colors.white, fontSize: 18)),
       ],
     );
   }
@@ -129,9 +137,9 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
-        Text("Island Kitchen Bar",
+        Text("Đèn Quầy Bar",
             style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-        Text("LED Pendant Ceiling Light",
+        Text("Đèn Thả Trần LED",
             style: TextStyle(color: Colors.white60, fontSize: 16)),
       ],
     );
@@ -145,6 +153,7 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
             setState(() {
               isOn = !isOn;
               if (isOn && intensity < 0.1) intensity = 0.5;
+              mqttHandler.publish('/topic/relay', isOn ? '1' : '0');
             });
           },
           child: AnimatedContainer(
@@ -170,7 +179,7 @@ shape: BoxShape.circle,
           ),
         ),
         const SizedBox(width: 15),
-        Text(isOn ? "ON" : "OFF",
+        Text(isOn ? "BẬT" : "TẮT",
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ],
     );
@@ -186,7 +195,7 @@ shape: BoxShape.circle,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            const Text("Light Intensity",
+            const Text("Cường độ ánh sáng",
                 style: TextStyle(color: Colors.white54, fontSize: 14)),
             const SizedBox(height: 10),
             Row(
@@ -216,7 +225,11 @@ shape: BoxShape.circle,
                       onChanged: (val) {
                         setState(() {
                           intensity = val;
-                          if (intensity <= 0.05) isOn = false;
+                          if (intensity <= 0.05) {
+                            isOn = false;
+                            mqttHandler.publish('/topic/relay', '0');
+                          }
+                          mqttHandler.publish('/topic/led', (intensity * 100).toInt().toString());
                         });
                       },
                     ),
