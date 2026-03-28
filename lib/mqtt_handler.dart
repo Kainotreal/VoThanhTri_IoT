@@ -14,7 +14,9 @@ class MqttHandler {
     try {
       print('Connecting to MQTT: $server:$port');
       client = createMqttClient(server, port);
-      client!.port = port;
+      client!.keepAlivePeriod = 20;
+      client!.autoReconnect = true;
+      client!.resubscribeOnAutoReconnect = true;
       client!.onDisconnected = onDisconnected;
       client!.onConnected = onConnected;
       client!.onSubscribed = onSubscribed;
@@ -26,7 +28,9 @@ class MqttHandler {
           .withWillQos(MqttQos.atLeastOnce);
       client!.connectionMessage = connMess;
 
+      print('MQTT: Attempting to connect to $server...');
       await client!.connect();
+      print('MQTT: Connection attempt finished. State: ${client!.connectionStatus!.state}');
       connectionStateController.add(client!.connectionStatus!.state);
     } catch (e) {
       print('MQTT connection error: $e');
