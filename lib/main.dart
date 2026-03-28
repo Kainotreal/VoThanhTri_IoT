@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'mqtt_handler.dart';
 
 void main() {
@@ -58,10 +59,42 @@ class _KitchenLightPageState extends State<KitchenLightPage> {
 
   Widget _buildHeader() {
     return Row(
-      children: const [
-        Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-        SizedBox(width: 5),
-        Text("Kitchen", style: TextStyle(color: Colors.white, fontSize: 18)),
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: const [
+            Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+            SizedBox(width: 5),
+            Text("Kitchen", style: TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        StreamBuilder<MqttConnectionState>(
+          stream: mqttHandler.connectionState,
+          initialData: MqttConnectionState.disconnected,
+          builder: (context, snapshot) {
+            Color statusColor = Colors.red;
+            String statusText = "Disconnected";
+            if (snapshot.data == MqttConnectionState.connected) {
+              statusColor = Colors.green;
+              statusText = "Connected";
+            } else if (snapshot.data == MqttConnectionState.connecting) {
+              statusColor = Colors.orange;
+              statusText = "Connecting...";
+            }
+
+            return Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
+                ),
+                const SizedBox(width: 8),
+                Text(statusText, style: TextStyle(color: statusColor, fontSize: 12)),
+              ],
+            );
+          },
+        ),
       ],
     );
   }

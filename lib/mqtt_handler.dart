@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'mqtt_factory.dart';
 
@@ -5,6 +6,9 @@ class MqttHandler {
   final String server = '10.52.238.234';
   final int port = 1883; 
   MqttClient? client;
+  final StreamController<MqttConnectionState> connectionStateController = StreamController<MqttConnectionState>.broadcast();
+
+  Stream<MqttConnectionState> get connectionState => connectionStateController.stream;
 
   Future<void> connect() async {
     try {
@@ -23,14 +27,23 @@ class MqttHandler {
       client!.connectionMessage = connMess;
 
       await client!.connect();
+      connectionStateController.add(client!.connectionStatus!.state);
     } catch (e) {
       print('MQTT connection error: $e');
+      connectionStateController.add(MqttConnectionState.disconnected);
       client?.disconnect();
     }
   }
 
-  void onConnected() => print('MQTT Connected');
-  void onDisconnected() => print('MQTT Disconnected');
+  void onConnected() {
+    print('MQTT Connected');
+    connectionStateController.add(MqttConnectionState.connected);
+  }
+
+  void onDisconnected() {
+    print('MQTT Disconnected');
+    connectionStateController.add(MqttConnectionState.disconnected);
+  }
   void onSubscribed(String topic) => print('Subscribed to $topic');
   void pong() => print('Ping response received');
 
