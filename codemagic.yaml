@@ -15,21 +15,16 @@ workflows:
         script: flutter packages pub get
       - name: Build Flutter iOS (Unsigned IPA)
         script: |
-          # Chạy build iOS
+          # Build cho thiết bị thật (iphoneos) không cần chứng chỉ gốc
           flutter build ios --release --no-codesign
           
-          # Đóng gói IPA thủ công (chỉ chạy nếu thư mục build tồn tại)
-          if [ -d "build/ios/iphoneos/Runner.app" ]; then
-            cd build/ios/iphoneos
-            mkdir -p Payload
-            cp -r Runner.app Payload/
-            zip -r app.ipa Payload
-          else
-            echo "Build failed: Runner.app not found"
-            exit 1
-          fi
+          # Đóng gói thành file .ipa để dùng Sideloadly hoặc 3uTools cài đặt
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r app.ipa Payload
     artifacts:
-      - build/ios/iphoneos/*.ipa
+      - build/ios/iphoneos/app.ipa
     publishing:
       email:
         recipients:
