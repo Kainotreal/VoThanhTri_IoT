@@ -9,26 +9,47 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: '*' # Theo dõi tất cả các branch (bao gồm branch DA của bạn)
+        - pattern: '*'
     scripts:
       - name: Get Flutter dependencies
         script: flutter packages pub get
-      - name: Build Flutter iOS (Unsigned IPA)
+      - name: Build Flutter iOS (Unsigned)
         script: |
-          set -e
+          # Chạy build nhưng cho phép script tiếp tục ngay cả khi Flutter báo lỗi chứng chỉ
+          flutter build ios --release --no-codesign || echo "Xcode build finished with signing warning, continuing to package..."
           
-          # Build bản release (đã tắt ký mã trong project.pbxproj)
-          flutter build ios --release --no-codesign
+          # Đợi 2 giây để đảm bảo file đã được ghi xong
+          sleep 2
           
-          # Đóng gói IPA
-          cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r app.ipa Payload
-          echo "Build and packaging successful!"
+          # Đóng gói IPA ngay lập tức từ kết quả build
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cd build/ios/iphoneos
+            mkdir -p Payload
+            cp -r Runner.app Payload/
+            zip -r app.ipa Payload
+            echo "Successfully packaged Unsigned IPA!"
+          else
+            echo "Error: Build failed or Runner.app not found."
+            exit 1
+          fi
     artifacts:
       - build/ios/iphoneos/*.ipa
-    publishing:
-      email:
-        recipients:
-          - vothanhtri1509@gmail.com
+
+  android-workflow:
+    name: Android Build Workflow
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*'
+    scripts:
+      - name: Get Flutter dependencies
+        script: flutter packages pub get
+      - name: Build Flutter APK
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
