@@ -80,25 +80,30 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    _buildWeatherCard(),
-                    const SizedBox(height: 24),
-                    _buildSectionHeader('All Devices'),
-                    const SizedBox(height: 16),
-                    _buildRoomFilters(),
-                    const SizedBox(height: 24),
-                    _isLoading 
-                      ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                      : _devices.isEmpty 
-                        ? _buildEmptyState()
-                        : _buildDeviceGrid(),
-                    const SizedBox(height: 100), // Space for bottom nav/FAB
-                  ],
+              child: RefreshIndicator(
+                onRefresh: _fetchDevices,
+                color: AppColors.primary,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      _buildWeatherCard(),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('All Devices'),
+                      const SizedBox(height: 16),
+                      _buildRoomFilters(),
+                      const SizedBox(height: 24),
+                      _isLoading 
+                        ? const Center(child: Padding(padding: EdgeInsets.only(top: 50), child: CircularProgressIndicator(color: AppColors.primary)))
+                        : _devices.isEmpty 
+                          ? _buildEmptyState()
+                          : _buildDeviceGrid(),
+                      const SizedBox(height: 100), // Space for bottom nav/FAB
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -511,7 +516,10 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 200,
             child: PrimaryButton(
               text: 'Add Device',
-              onPressed: () => context.push(AppRoutes.addDevice),
+              onPressed: () async {
+                await context.push(AppRoutes.addDevice);
+                _fetchDevices(); // Refresh when returning
+              },
               icon: Icons.add,
             ),
           ),
@@ -643,7 +651,10 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 16),
             // Add Icon
             GestureDetector(
-              onTap: () => context.push(AppRoutes.addDevice),
+              onTap: () async {
+                await context.push(AppRoutes.addDevice);
+                _fetchDevices(); // Refresh when returning
+              },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
