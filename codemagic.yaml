@@ -3,29 +3,21 @@ workflows:
     name: iOS Build Workflow
     max_build_duration: 60
     instance_type: mac_mini_m2 
-    environment:
-      flutter: stable
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: '*' # Theo dõi tất cả các branch
+        - pattern: 'main'
     scripts:
       - name: Get Flutter dependencies
         script: flutter packages pub get
-      - name: Build Flutter iOS (Unsigned IPA)
+      - name: Build Flutter iOS
         script: |
-          # Build cho thiết bị thật (iphoneos) không cần chứng chỉ gốc
+          # Build bản debug để kiểm tra lỗi nhanh hơn và không yêu cầu ký số khắt khe
           flutter build ios --release --no-codesign
-          
-          # Đóng gói thành file .ipa để dùng Sideloadly hoặc 3uTools cài đặt
-          cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r app.ipa Payload
     artifacts:
-      - build/ios/iphoneos/app.ipa
+      - build/ios/iphoneos/*.app # Vì không có chứng chỉ Apple nên nó sẽ ra file .app thay vì .ipa
     publishing:
       email:
         recipients:
-          - vothanhtri1509@gmail.com
+          - vothanhtri1509@gmail.com # Mình lấy từ email trong ảnh log của bạn nhé
