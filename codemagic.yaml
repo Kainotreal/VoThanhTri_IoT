@@ -18,13 +18,15 @@ workflows:
           # Build cho thiết bị thật (iphoneos) không cần chứng chỉ gốc
           flutter build ios --release --no-codesign
           
-          # Đóng gói thành file .ipa để dùng Sideloadly hoặc 3uTools cài đặt
+          # Đóng gói thành file .ipa
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
           zip -r app.ipa Payload
+          mv app.ipa ../../../app.ipa # Di chuyển ra thư mục gốc
     artifacts:
-      - build/ios/iphoneos/app.ipa
+      - "*.ipa"
+      - build/ios/iphoneos/*.app
     publishing:
       email:
         recipients:
