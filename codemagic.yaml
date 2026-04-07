@@ -1,45 +1,30 @@
 workflows:
-  ios-release:
-    name: iOS Release Build
-    max_build_duration: 120
-    instance_type: mac_mini_m2
+  ios-workflow:
+    name: iOS Build Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m2 
     environment:
-      groups:
-        - app_store_connect # Nhóm biến môi trường chứa API keys trên Codemagic UI
-      vars:
-        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
       flutter: stable
-      xcode: latest
-      cocoapods: default
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: 'main'
+        - pattern: '*' # Theo dõi tất cả các branch
     scripts:
-      - name: Set up keychain to be used for code signing
+      - name: Get Flutter dependencies
+        script: flutter packages pub get
+      - name: Build Flutter iOS (Unsigned IPA)
         script: |
-          keychain initialize
-      - name: Fetch Flutter dependencies
-        script: |
-          flutter packages pub get
-      - name: Install Pods
-        script: |
-          find . -name "Podfile" -execdir pod install \;
-      - name: Fetch signing files from Apple
-        script: |
-          # Lệnh này yêu cầu App Store Connect API keys
-          app-store-connect fetch-signing-files $(bundle-identifier) --project-type ios --create
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
-      - name: Build Flutter IPA
-        script: |
-          flutter build ipa --release \
-            --export-options-plist=$HOME/export_options.plist
+          # Build cho thiết bị thật (iphoneos) không cần chứng chỉ gốc
+          flutter build ios --release --no-codesign
+          
+          # Đóng gói thành file .ipa để dùng Sideloadly hoặc 3uTools cài đặt
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r app.ipa Payload
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/app.ipa
     publishing:
       email:
         recipients:
