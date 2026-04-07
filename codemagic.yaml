@@ -1,23 +1,46 @@
 workflows:
-  ios-workflow:
-    name: iOS Build Workflow
-    max_build_duration: 60
-    instance_type: mac_mini_m2 
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - app_store_connect # Nhóm biến môi trường chứa API keys trên Codemagic UI
+      vars:
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
     triggering:
       events:
         - push
       branch_patterns:
         - pattern: 'main'
     scripts:
-      - name: Get Flutter dependencies
-        script: flutter packages pub get
-      - name: Build Flutter iOS
+      - name: Set up keychain to be used for code signing
         script: |
-          # Build bản debug để kiểm tra lỗi nhanh hơn và không yêu cầu ký số khắt khe
-          flutter build ios --release --no-codesign
+          keychain initialize
+      - name: Fetch Flutter dependencies
+        script: |
+          flutter packages pub get
+      - name: Install Pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Fetch signing files from Apple
+        script: |
+          # Lệnh này yêu cầu App Store Connect API keys
+          app-store-connect fetch-signing-files $(bundle-identifier) --project-type ios --create
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build Flutter IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=$HOME/export_options.plist
     artifacts:
-      - build/ios/iphoneos/*.app 
+      - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
-          - vothanhtri1509@gmail.com 
+          - vothanhtri1509@gmail.com
